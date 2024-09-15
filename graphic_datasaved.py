@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 from datetime import datetime
 import json
+import os
 
 # Define the Supplier, Product, PerishableProduct, and NonPerishableProduct classes
 
@@ -32,6 +33,17 @@ class Product:
             return "Stock above maximum"
         return "Stock is within range"
 
+    def to_dict(self):
+        return {
+            'type': 'Product',
+            'name': self.name,
+            'quantity': self.quantity,
+            'price': self.price,
+            'supplier': self.supplier.name,
+            'min_stock': self.min_stock,
+            'max_stock': self.max_stock
+        }
+
     def __str__(self):
         return f"{self.name}: {self.quantity} units at ${self.price}, Supplier: {self.supplier.name}"
 
@@ -46,6 +58,14 @@ class PerishableProduct(Product):
     def is_expired(self):
         return datetime.now() > self.expiration_date
 
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({
+            'type': 'PerishableProduct',
+            'expiration_date': self.expiration_date.strftime('%Y-%m-%d')
+        })
+        return data
+
     def __str__(self):
         return super().__str__() + f", Expires on: {self.expiration_date.date()}"
 
@@ -53,6 +73,14 @@ class NonPerishableProduct(Product):
     def __init__(self, name, quantity, price, shelf_life, supplier, min_stock, max_stock):
         super().__init__(name, quantity, price, supplier, min_stock, max_stock)
         self.shelf_life = shelf_life
+
+    def to_dict(self):
+        data = super().to_dict()
+        data.update({
+            'type': 'NonPerishableProduct',
+            'shelf_life': self.shelf_life
+        })
+        return data
 
     def __str__(self):
         return super().__str__() + f", Shelf life: {self.shelf_life}"
@@ -132,13 +160,38 @@ class UserManager:
 # Inventory class
 
 class Inventory:
-    def __init__(self, master, username, user_manager):
+    def __init__(self, master, username, user_manager, inventory_file='inventory.json'):
         self.master = master
         self.username = username
         self.user_manager = user_manager
-        self.inventory = []  # List to store inventory items
+        self.inventory_file = inventory_file
+        self.inventory = self.load_inventory()  # Load inventory from file
         self.transaction_history = []  # List to store transaction history
         self.create_inventory_screen()
+
+    def load_inventory(self):
+        # Load inventory from a JSON file
+        if os.path.exists(self.inventory_file):
+            with open(self.inventory_file, 'r') as file:
+                data = json.load(file)
+                return [self.create_product_from_dict(item) for item in data]
+        return []
+
+    def save_inventory(self):
+        # Save inventory to a JSON file
+        with open(self.inventory_file, 'w') as file:
+            json.dump([product.to_dict() for product in self.inventory], file)
+
+    def create_product_from_dict(self, data):
+        # Create product instances from dictionary data
+        supplier = Supplier(data['supplier'], "contact@example.com")  # Simplified for demonstration
+        if data['type'] == 'PerishableProduct':
+            expiration_date = datetime.strptime(data['expiration_date'], '%Y-%m-%d')
+            return PerishableProduct(data['name'], data['quantity'], data['price'], expiration_date, supplier, data['min_stock'], data['max_stock'])
+        elif data['type'] == 'NonPerishableProduct':
+            return NonPerishableProduct(data['name'], data['quantity'], data['price'], data['shelf_life'], supplier, data['min_stock'], data['max_stock'])
+        else:
+            return Product(data['name'], data['quantity'], data['price'], supplier, data['min_stock'], data['max_stock'])
 
     def create_inventory_screen(self):
         self.clear_screen()
@@ -160,6 +213,10 @@ class Inventory:
 
         self.product_list = ctk.CTkTextbox(self.tree, width=600, height=200)
         self.product_list.pack()
+
+        # Display loaded inventory
+        for product in self.inventory:
+            self.product_list.insert(ctk.END, f"{product}\n")
 
         # Input fields for product details
         ctk.CTkLabel(self.frame, text="Product Name:").grid(row=2, column=0, pady=5, sticky='e')
@@ -244,6 +301,7 @@ class Inventory:
         self.product_list.insert(ctk.END, f"{product}\n")
         self.transaction_history.append(f"Added {name} at {datetime.now()}")
         self.clear_entries()
+        self.save_inventory()  # Save inventory after adding a product
 
     def update_product(self):
         # Function to update an existing product (example, needs real selection handling)
@@ -269,12 +327,14 @@ class Inventory:
         self.product_list.insert(ctk.END, f"{updated_product}\n")
         self.transaction_history.append(f"Updated {name} at {datetime.now()}")
         self.clear_entries()
+        self.save_inventory()  # Save inventory after updating a product
 
     def remove_product(self):
         # Function to remove a product (example, needs real selection handling)
         selected_item = self.product_list.get("1.0", ctk.END).splitlines()[0]  # Example, needs actual selection
         self.product_list.delete("1.0", ctk.END)  # Replace with correct index handling
         self.transaction_history.append(f"Removed {selected_item.split(',')[0]} at {datetime.now()}")
+        self.save_inventory()  # Save inventory after removing a product
 
     def search_product(self):
         # Function to search for products by name
