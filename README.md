@@ -160,3 +160,65 @@ The `Inventory` class manages the warehouse's stock of products.
 
 3. **Reports**:
    - The system can generate different types of inventory reports, which are crucial for managing stock levels and ensuring that perishable goods are handled properly.
+
+
+# Inventory Management System
+
+This repository contains a simple inventory management system built in Python. The system manages user authentication, product details, and inventory operations for both perishable and non-perishable products.
+
+## GUI Implementation
+
+Before running the application, make sure to install `customtkinter` by running the following command:
+
+```bash
+pip install customtkinter 
+```
+
+In addition to the backend logic for managing users and inventory, we have implemented a Graphical User Interface (GUI) using `customtkinter`, an extended version of the traditional `tkinter` library that provides modern and customizable UI elements.
+
+### Overview of the GUI
+
+The GUI provides an intuitive and user-friendly interface for interacting with the inventory management system. It includes the following features:
+
+1. **Login and Registration Screen**:
+   - Users can log in or register a new account using the login screen.
+   - The interface provides fields for entering a username and password, along with buttons to log in or register.
+
+2. **Inventory Management Screen**:
+   - After a successful login, users are redirected to the inventory management screen.
+   - The screen allows users to add, update, or remove products from the inventory.
+   - It includes input fields for product details such as name, quantity, price, supplier, minimum and maximum stock levels.
+   - Users can also generate reports of the inventory directly from the interface.
+
+3. **Actions and Functionalities**:
+   - **Add Product**: Allows users to add new products to the inventory by filling in the required fields.
+   - **Update Product**: Users can update existing product details, such as quantity and price.
+   - **Remove Product**: Provides functionality to remove products from the inventory.
+   - **Generate Report**: Generates detailed inventory reports, which include all the products currently in stock.
+   - **Log Out**: Logs the user out and returns to the login screen.
+   - **Exit**: Exits the application.
+
+### Technical Details
+
+- The GUI is built using `customtkinter`, which is a more modern and customizable extension of the default `tkinter` library. It offers enhanced styling options and improved widgets, making the application look modern and user-friendly.
+- The GUI components are organized using frames and grids to ensure a responsive and centered layout.
+- User inputs are validated before being processed, ensuring that the data entered is correct and within acceptable ranges.
+
+### How to Use the GUI
+
+1. **Starting the Application**:
+   - Run the application by executing the main Python script.
+   - The application window will center itself on your screen and display the login interface.
+
+2. **Logging In or Registering**:
+   - Enter your username and password to log in.
+   - If you don't have an account, click on "Register" to create a new user account.
+
+3. **Managing Inventory**:
+   - After logging in, use the inventory management screen to add, update, or remove products.
+   - Generate reports to view the current state of the inventory.
+
+4. **Exiting the Application**:
+   - You can log out to return to the login screen or exit the application directly from the inventory management screen.
+
+This GUI implementation provides a seamless and efficient way for users to manage inventory without needing to interact with the backend code directly, enhancing the overall user experience of the Inventory Management System.
