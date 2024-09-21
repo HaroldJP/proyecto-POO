@@ -37,14 +37,14 @@ class UserManager:
                 password = input("Enter your password: ")
                 if self.user_data[username] == password:
                     print("Login successful.")
-                    return True
+                    return username  # Return the username to identify the user
                 else:
                     print("Incorrect password.")
             else:
                 print("Username not found.")
             if input("Try again? (yes/no): ").strip().lower() != 'yes':
                 break
-        return False
+        return None
 
 # Supplier Class
 class Supplier:
@@ -95,9 +95,48 @@ class NonPerishableProduct(Product):
 
 # Inventory Management Class
 class Inventory:
-    def __init__(self):
-        self.total_inv = []
+    def __init__(self, username):
+        self.username = username
+        self.inventory_file = f'inventory_{username}.json'
+        self.total_inv = self.load_inventory()
         self.transaction_history = []
+
+    def load_inventory(self):
+        try:
+            with open(self.inventory_file, 'r') as file:
+                inventory_data = json.load(file)
+                return [self.create_product_from_data(data) for data in inventory_data]
+        except FileNotFoundError:
+            return []
+
+    def save_inventory(self):
+        with open(self.inventory_file, 'w') as file:
+            inventory_data = [self.product_to_dict(product) for product in self.total_inv]
+            json.dump(inventory_data, file, indent=4)
+
+    def create_product_from_data(self, data):
+        if data['type'] == 'PerishableProduct':
+            return PerishableProduct(data['name'], data['quantity'], data['price'], 
+                                     datetime.strptime(data['expiration_date'], "%Y-%m-%d").date(),
+                                     Supplier(data['supplier']['name'], data['supplier']['contact_info']) if data['supplier'] else None,
+                                     data['min_stock'], data['max_stock'])
+        else:
+            return NonPerishableProduct(data['name'], data['quantity'], data['price'], data['shelf_life'],
+                                        Supplier(data['supplier']['name'], data['supplier']['contact_info']) if data['supplier'] else None,
+                                        data['min_stock'], data['max_stock'])
+
+    def product_to_dict(self, product):
+        return {
+            'type': 'PerishableProduct' if isinstance(product, PerishableProduct) else 'NonPerishableProduct',
+            'name': product.name,
+            'quantity': product.quantity,
+            'price': product.price,
+            'min_stock': product.min_stock,
+            'max_stock': product.max_stock,
+            'supplier': {'name': product.supplier.name, 'contact_info': product.supplier.contact_info} if product.supplier else None,
+            'expiration_date': product.expiration_date.strftime("%Y-%m-%d") if isinstance(product, PerishableProduct) else None,
+            'shelf_life': product.shelf_life if isinstance(product, NonPerishableProduct) else None
+        }
 
     def show_inventory(self):
         if not self.total_inv:
@@ -109,12 +148,14 @@ class Inventory:
     def add_product(self, product):
         self.total_inv.append(product)
         self.transaction_history.append(f"Added {product.name} at {datetime.now()}")
+        self.save_inventory()
         print(f"{product.name} added to inventory.")
 
     def remove_product(self, product_index):
         try:
             removed_product = self.total_inv.pop(product_index)
             self.transaction_history.append(f"Removed {removed_product.name} at {datetime.now()}")
+            self.save_inventory()
             print(f"{removed_product.name} removed from inventory.")
         except IndexError:
             print("Invalid selection. Please try again.")
@@ -129,6 +170,7 @@ class Inventory:
             if price is not None:
                 product.update_price(price)
             self.transaction_history.append(f"Updated {product.name} at {datetime.now()}")
+            self.save_inventory()
             print(f"{product.name} updated.")
         except IndexError:
             print("Invalid selection. Please try again.")
@@ -186,8 +228,9 @@ if __name__ == "__main__":
             user_manager.register_user()
         
         elif choice == '2':
-            if user_manager.login_user():  # If login is successful
-                inventory = Inventory()
+            username = user_manager.login_user()
+            if username:  # If login is successful
+                inventory = Inventory(username)
                 
                 while True:
                     print("\nInventory Management Menu:")
