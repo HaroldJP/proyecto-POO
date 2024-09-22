@@ -151,7 +151,7 @@ The `Inventory` class manages the warehouse's stock of products.
   - `generate_report`: Generates various types of reports, including full inventory, low stock, expiring soon, and expired products.
   - `save_inventory`: Method is used to persist the current state of the inventory to a file or database. This ensures that all changes made to the inventory are saved and can be restored in future sessions
 
-## Application Workflow
+## Main.py: Application Workflow
 
 1. **User Registration/Login**:
    - Users can register or log in to access the warehouse management features.
