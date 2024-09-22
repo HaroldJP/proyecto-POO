@@ -1,4 +1,0 @@
-customtkinter
-os
-json
-datetime
