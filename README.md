@@ -178,11 +178,69 @@ In addition to the backend logic for managing users and inventory, we have imple
 
 ### Overview of the GUI
 
+## Mermaid - graphical user interface
+
+```mermaid
+classDiagram
+    class UserManager {
+        +master, user_file
+        +load_users()
+        +save_users()
+        +create_login_screen()
+        +clear_screen()
+        +register_user()
+        +login_user()
+        +create_change_password_screen()
+    }
+
+    class Inventory {
+        +load_inventory()
+        +save_inventory()
+        +create_inventory_screen()
+        +add_product()
+        +update_product()
+        +remove_product()
+        +search_product()
+        +generate_report()
+        +clear_entries()
+        +autocomplete_product_details()
+    }
+
+    class Supplier {
+        +__init__(name, contact_info)
+    }
+
+    class Product {
+        +update_quantity(quantity)
+        +update_price(price)
+        +check_stock()
+        +to_dict()
+    }
+
+    class PerishableProduct {
+        <<inherits>> Product
+        +is_near_expiration(days)
+        +is_expired()
+    }
+
+    class NonPerishableProduct {
+        <<inherits>> Product
+        +name, quantity, price, shelf_life, supplier, min_stock, max_stock
+    }
+
+    UserManager "1" -- "*" Inventory
+    Inventory "1" -- "*" Supplier
+    Inventory "1" -- "*" Product
+    Product <|-- PerishableProduct
+    Product <|-- NonPerishableProduct
+```
+
 The GUI provides an intuitive and user-friendly interface for interacting with the inventory management system. It includes the following features:
 
 1. **Login and Registration Screen**:
    - Users can log in or register a new account using the login screen.
    - The interface provides fields for entering a username and password, along with buttons to log in or register.
+   - Provides the possibility of changing the password, deleting a user and returning between menus
 
 2. **Inventory Management Screen**:
    - After a successful login, users are redirected to the inventory management screen.
@@ -197,6 +255,15 @@ The GUI provides an intuitive and user-friendly interface for interacting with t
    - **Generate Report**: Generates detailed inventory reports, which include all the products currently in stock.
    - **Log Out**: Logs the user out and returns to the login screen.
    - **Exit**: Exits the application.
+  
+## The main problems that we had to overcome
+- Sync product update changes with JSON
+- Design an easy-to-understand interface that would facilitate and optimize processes
+## How did we solve that?
+- Each product is converted to a dictionary using its **to_dict** method, and the entire list is saved to the file specified by **self.inventory_file**. The line self.save_inventory() calls this method to perform the save operation.
+- We added buttons to quickly return between menus and by searching for a product by name, we allowed the product's data to be auto-completed.
+
+***
 
 ### Technical Details
 
@@ -213,6 +280,8 @@ The GUI provides an intuitive and user-friendly interface for interacting with t
 2. **Logging In or Registering**:
    - Enter your username and password to log in.
    - If you don't have an account, click on "Register" to create a new user account.
+   - If you need to delete an user, you just need to write the corresponding data.
+   - If you want to change the password, click on "Change Password".
 
 3. **Managing Inventory**:
    - After logging in, use the inventory management screen to add, update, or remove products.
