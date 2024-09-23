@@ -40,12 +40,13 @@ class Product:
             'quantity': self.quantity,
             'price': self.price,
             'supplier': self.supplier.name,
+            'contact_info': self.supplier.contact_info,
             'min_stock': self.min_stock,
             'max_stock': self.max_stock
         }
 
     def __str__(self):
-        return f"{self.name}: {self.quantity} units at ${self.price}, Supplier: {self.supplier.name}"
+        return f"{self.name}: {self.quantity} units at ${self.price}, Supplier: {self.supplier.name}, contact: {self.supplier.contact_info}"
 
 class PerishableProduct(Product):
     def __init__(self, name, quantity, price, expiration_date, supplier, min_stock, max_stock):
@@ -117,17 +118,19 @@ class UserManager:
         self.master.grid_columnconfigure(0, weight=1)
 
         # Create login screen
-        ctk.CTkLabel(self.frame, text="Username:").grid(row=0, column=0, padx=10, pady=10, sticky='e')
+        ctk.CTkLabel(self.frame, text="Username:").grid(row=0, column=0, padx=10, pady=10, sticky='w')
         self.username_entry = ctk.CTkEntry(self.frame)
-        self.username_entry.grid(row=0, column=1, padx=10, pady=10)
+        self.username_entry.grid(row=0, column=1, padx=10, pady=10, sticky='w')
 
-        ctk.CTkLabel(self.frame, text="Password:").grid(row=1, column=0, padx=10, pady=10, sticky='e')
+        ctk.CTkLabel(self.frame, text="Password:").grid(row=1, column=0, padx=10, pady=10, sticky='w')
         self.password_entry = ctk.CTkEntry(self.frame, show='*')
-        self.password_entry.grid(row=1, column=1, padx=10, pady=10)
+        self.password_entry.grid(row=1, column=1, padx=10, pady=10, sticky='w')
 
         # Buttons for login and registration
         ctk.CTkButton(self.frame, text="Login", command=self.login_user).grid(row=2, column=0, padx=10, pady=10)
         ctk.CTkButton(self.frame, text="Register", command=self.register_user).grid(row=2, column=1, padx=10, pady=10)
+        ctk.CTkButton(self.frame, text="Change Password", command=self.create_change_password_screen).grid(row=3, column=0, padx=10, pady=10)
+        ctk.CTkButton(self.frame, text="Delete User", command=self.create_delete_user_screen).grid(row=3, column=1, padx=10, pady=10)
 
     def clear_screen(self):
         # Clear all widgets from the current screen
@@ -138,7 +141,13 @@ class UserManager:
         # Function to register a new user
         username = self.username_entry.get()
         password = self.password_entry.get()
-        if username in self.user_data:
+        
+        # Check password length and if it contains at least one number
+        if len(password) < 5 or len(password) > 10:
+            messagebox.showerror("Error", "Password must be between 5 and 10 characters long.")
+        elif not any(char.isdigit() for char in password):
+            messagebox.showerror("Error", "Password must contain at least one number.")
+        elif username in self.user_data:
             messagebox.showerror("Error", "Username already exists.")
         else:
             self.user_data[username] = password
@@ -154,6 +163,79 @@ class UserManager:
             messagebox.showinfo("Success", "Login successful.")
             self.clear_screen()
             Inventory(self.master, username, self)  # Pass self to enable logout functionality
+        else:
+            messagebox.showerror("Error", "Invalid username or password.")
+
+    def create_change_password_screen(self):
+        self.clear_screen()
+
+        # Create a frame to center elements
+        self.frame = ctk.CTkFrame(self.master)
+        self.frame.grid(row=0, column=0, padx=20, pady=20)
+        
+        # Ensure the frame is centered
+        self.master.grid_rowconfigure(0, weight=1)
+        self.master.grid_columnconfigure(0, weight=1)
+
+        # Create change password screen
+        ctk.CTkLabel(self.frame, text="Username:").grid(row=0, column=0, padx=10, pady=10, sticky='e')
+        self.username_entry = ctk.CTkEntry(self.frame)
+        self.username_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        ctk.CTkLabel(self.frame, text="Old Password:").grid(row=1, column=0, padx=10, pady=10, sticky='e')
+        self.old_password_entry = ctk.CTkEntry(self.frame, show='*')
+        self.old_password_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        ctk.CTkLabel(self.frame, text="New Password:").grid(row=2, column=0, padx=10, pady=10, sticky='e')
+        self.new_password_entry = ctk.CTkEntry(self.frame, show='*')
+        self.new_password_entry.grid(row=2, column=1, padx=10, pady=10)
+
+        ctk.CTkButton(self.frame, text="Change Password", command=self.change_password).grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+        ctk.CTkButton(self.frame, text="Back", command=self.create_login_screen).grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+
+    def change_password(self):
+        username = self.username_entry.get()
+        old_password = self.old_password_entry.get()
+        new_password = self.new_password_entry.get()
+        if self.user_data.get(username) == old_password:
+            self.user_data[username] = new_password
+            self.save_users()
+            messagebox.showinfo("Success", "Password changed successfully.")
+            self.create_login_screen()
+        else:
+            messagebox.showerror("Error", "Invalid username or old password.")
+
+    def create_delete_user_screen(self):
+        self.clear_screen()
+
+        # Create a frame to center elements
+        self.frame = ctk.CTkFrame(self.master)
+        self.frame.grid(row=0, column=0, padx=20, pady=20)
+        
+        # Ensure the frame is centered
+        self.master.grid_rowconfigure(0, weight=1)
+        self.master.grid_columnconfigure(0, weight=1)
+
+        # Create delete user screen
+        ctk.CTkLabel(self.frame, text="Username:").grid(row=0, column=0, padx=10, pady=10, sticky='e')
+        self.username_entry = ctk.CTkEntry(self.frame)
+        self.username_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        ctk.CTkLabel(self.frame, text="Password:").grid(row=1, column=0, padx=10, pady=10, sticky='e')
+        self.password_entry = ctk.CTkEntry(self.frame, show='*')
+        self.password_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        ctk.CTkButton(self.frame, text="Delete User", command=self.delete_user).grid(row=2, column=0, columnspan=2, padx=10, pady=10)
+        ctk.CTkButton(self.frame, text="Back", command=self.create_login_screen).grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+    def delete_user(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        if self.user_data.get(username) == password:
+            del self.user_data[username]
+            self.save_users()
+            messagebox.showinfo("Success", f"User {username} deleted successfully.")
+            self.create_login_screen()
         else:
             messagebox.showerror("Error", "Invalid username or password.")
 
@@ -222,48 +304,53 @@ class Inventory:
         ctk.CTkLabel(self.frame, text="Product Name:").grid(row=2, column=0, pady=5, sticky='e')
         self.name_entry = ctk.CTkEntry(self.frame)
         self.name_entry.grid(row=2, column=1, pady=5)
+        self.name_entry.bind("<FocusOut>", self.autocomplete_product_details)
 
-        ctk.CTkLabel(self.frame, text="Quantity:").grid(row=3, column=0, pady=5, sticky='e')
+        ctk.CTkLabel(self.frame, text="Quantity:").grid(row=2, column=2, pady=5, sticky='e')
         self.quantity_entry = ctk.CTkEntry(self.frame)
-        self.quantity_entry.grid(row=3, column=1, pady=5)
+        self.quantity_entry.grid(row=2, column=3, pady=5)
 
-        ctk.CTkLabel(self.frame, text="Price:").grid(row=4, column=0, pady=5, sticky='e')
+        ctk.CTkLabel(self.frame, text="Price:").grid(row=3, column=0, pady=5, sticky='e')
         self.price_entry = ctk.CTkEntry(self.frame)
-        self.price_entry.grid(row=4, column=1, pady=5)
+        self.price_entry.grid(row=3, column=1, pady=5)
 
-        ctk.CTkLabel(self.frame, text="Supplier:").grid(row=5, column=0, pady=5, sticky='e')
+        ctk.CTkLabel(self.frame, text="Supplier:").grid(row=3, column=2, pady=5, sticky='e')
         self.supplier_entry = ctk.CTkEntry(self.frame)
-        self.supplier_entry.grid(row=5, column=1, pady=5)
+        self.supplier_entry.grid(row=3, column=3, pady=5)
 
-        ctk.CTkLabel(self.frame, text="Min Stock:").grid(row=6, column=0, pady=5, sticky='e')
+        ctk.CTkLabel(self.frame, text="Contact of Distributor:").grid(row=4, column=0, pady=5, sticky='e')
+        self.distributor_contact_entry = ctk.CTkEntry(self.frame)
+        self.distributor_contact_entry.grid(row=4, column=1, pady=5)
+
+        ctk.CTkLabel(self.frame, text="Min Stock:").grid(row=4, column=2, pady=5, sticky='e')
         self.min_stock_entry = ctk.CTkEntry(self.frame)
-        self.min_stock_entry.grid(row=6, column=1, pady=5)
+        self.min_stock_entry.grid(row=4, column=3, pady=5)
 
-        ctk.CTkLabel(self.frame, text="Max Stock:").grid(row=7, column=0, pady=5, sticky='e')
+        ctk.CTkLabel(self.frame, text="Max Stock:").grid(row=5, column=0, pady=5, sticky='e')
         self.max_stock_entry = ctk.CTkEntry(self.frame)
-        self.max_stock_entry.grid(row=7, column=1, pady=5)
+        self.max_stock_entry.grid(row=5, column=1, pady=5)
 
         # Additional input for product type and expiration/shelf life
         self.product_type_var = ctk.StringVar(value="Non-Perishable")
-        ctk.CTkLabel(self.frame, text="Product Type:").grid(row=8, column=0, pady=5, sticky='e')
+        ctk.CTkLabel(self.frame, text="Product Type:").grid(row=5, column=2, pady=5, sticky='e')
         product_type_menu = ctk.CTkOptionMenu(self.frame, values=["Non-Perishable", "Perishable"], variable=self.product_type_var, command=self.toggle_expiration_entry)
-        product_type_menu.grid(row=8, column=1, pady=5)
+        product_type_menu.grid(row=5, column=3, pady=5)
 
-        ctk.CTkLabel(self.frame, text="Expiration Date (YYYY-MM-DD) / Shelf Life:").grid(row=9, column=0, pady=5, sticky='e')
+        ctk.CTkLabel(self.frame, text="Expiration Date (YYYY-MM-DD) / Shelf Life:").grid(row=6, column=0, pady=5, sticky='e')
         self.expiration_entry = ctk.CTkEntry(self.frame)
-        self.expiration_entry.grid(row=9, column=1, pady=5)
+        self.expiration_entry.grid(row=6, column=1, pady=5)
 
         # Initialize expiration entry state
         self.toggle_expiration_entry("Non-Perishable")
 
         # Action buttons
-        ctk.CTkButton(self.frame, text="Add Product", command=self.add_product).grid(row=10, column=0, pady=10, padx=5)
-        ctk.CTkButton(self.frame, text="Update Product", command=self.update_product).grid(row=10, column=1, pady=10, padx=5)
-        ctk.CTkButton(self.frame, text="Remove Product", command=self.remove_product).grid(row=10, column=2, pady=10, padx=5)
-        ctk.CTkButton(self.frame, text="Generate Report", command=self.generate_report).grid(row=10, column=3, pady=10, padx=5)
-        ctk.CTkButton(self.frame, text="Search Product", command=self.search_product).grid(row=10, column=4, pady=10, padx=5)
-        ctk.CTkButton(self.frame, text="Log Out", command=self.logout).grid(row=10, column=5, pady=10, padx=5)
-        ctk.CTkButton(self.frame, text="Exit", command=self.master.quit).grid(row=10, column=6, pady=10, padx=5)
+        ctk.CTkButton(self.frame, text="Add Product", command=self.add_product).grid(row=10, column=0, pady=5, padx=5)
+        ctk.CTkButton(self.frame, text="Update Product", command=self.update_product).grid(row=10, column=1, pady=5, padx=5)
+        ctk.CTkButton(self.frame, text="Remove Product", command=self.remove_product).grid(row=10, column=2, pady=5, padx=5)
+        ctk.CTkButton(self.frame, text="Generate Report", command=self.generate_report).grid(row=10, column=3, pady=5, padx=5)
+        ctk.CTkButton(self.frame, text="Search Product", command=self.search_product).grid(row=10, column=4, pady=5, padx=5)
+        ctk.CTkButton(self.frame, text="Log Out", command=self.logout).grid(row=10, column=5, pady=5, padx=5)
+        ctk.CTkButton(self.frame, text="Exit", command=self.master.quit).grid(row=10, column=6, pady=5, padx=5)
 
     def toggle_expiration_entry(self, selected_type):
         # Enable or disable the expiration date entry based on product type
@@ -277,6 +364,35 @@ class Inventory:
         # Clear all widgets from the current screen
         for widget in self.master.winfo_children():
             widget.destroy()
+
+    def autocomplete_product_details(self, event):
+        # Function to autocomplete product details based on the product name
+        name = self.name_entry.get()
+        for product in self.inventory:
+            if product.name == name:
+                self.quantity_entry.delete(0, ctk.END)
+                self.quantity_entry.insert(0, product.quantity)
+                self.price_entry.delete(0, ctk.END)
+                self.price_entry.insert(0, product.price)
+                self.supplier_entry.delete(0, ctk.END)
+                self.supplier_entry.insert(0, product.supplier.name)
+                self.distributor_contact_entry.delete(0, ctk.END)
+                self.distributor_contact_entry.insert(0, product.supplier.contact_info)
+                self.min_stock_entry.delete(0, ctk.END)
+                self.min_stock_entry.insert(0, product.min_stock)
+                self.max_stock_entry.delete(0, ctk.END)
+                self.max_stock_entry.insert(0, product.max_stock)
+                if isinstance(product, PerishableProduct):
+                    self.product_type_var.set("Perishable")
+                    self.expiration_entry.configure(state='normal')
+                    self.expiration_entry.delete(0, ctk.END)
+                    self.expiration_entry.insert(0, product.expiration_date.strftime('%Y-%m-%d'))
+                else:
+                    self.product_type_var.set("Non-Perishable")
+                    self.expiration_entry.configure(state='normal')
+                    self.expiration_entry.delete(0, ctk.END)
+                    self.expiration_entry.insert(0, product.shelf_life)
+                break
 
     def add_product(self):
         # Function to add a new product to the inventory
@@ -304,36 +420,53 @@ class Inventory:
         self.save_inventory()  # Save inventory after adding a product
 
     def update_product(self):
-        # Function to update an existing product (example, needs real selection handling)
+        # Function to update an existing product
         selected_item = self.product_list.get("1.0", ctk.END).splitlines()[0]  # Example, needs actual selection
-        name = self.name_entry.get()
-        quantity = int(self.quantity_entry.get() or 0)
-        price = float(self.price_entry.get() or 0.0)
-        supplier_name = self.supplier_entry.get() or 'N/A'
-        supplier = Supplier(supplier_name, "contact@example.com")  # Simplified for demonstration
-        min_stock = int(self.min_stock_entry.get() or 0)
-        max_stock = int(self.max_stock_entry.get() or 0)
-        product_type = self.product_type_var.get()
-        expiration_or_shelf_life = self.expiration_entry.get()
+        selected_name = selected_item.split(":")[0]  # Extract the product name from the selected item
 
-        # Update the product details (example implementation)
-        if product_type == "Perishable":
-            expiration_date = datetime.strptime(expiration_or_shelf_life, "%Y-%m-%d")
-            updated_product = PerishableProduct(name, quantity, price, expiration_date, supplier, min_stock, max_stock)
-        else:
-            updated_product = NonPerishableProduct(name, quantity, price, expiration_or_shelf_life, supplier, min_stock, max_stock)
+        # Find the product in the inventory
+        for product in self.inventory:
+            if product.name == selected_name:
+                # Update the product details
+                product.name = self.name_entry.get() or product.name
+                product.quantity = int(self.quantity_entry.get() or product.quantity)
+                product.price = float(self.price_entry.get() or product.price)
+                supplier_name = self.supplier_entry.get() or product.supplier.name
+                product.supplier = Supplier(supplier_name, "contact@example.com")  # Simplified for demonstration
+                product.min_stock = int(self.min_stock_entry.get() or product.min_stock)
+                product.max_stock = int(self.max_stock_entry.get() or product.max_stock)
+                product_type = self.product_type_var.get()
+                expiration_or_shelf_life = self.expiration_entry.get()
 
-        self.product_list.delete("1.0", ctk.END)  # Replace with correct index handling
-        self.product_list.insert(ctk.END, f"{updated_product}\n")
-        self.transaction_history.append(f"Updated {name} at {datetime.now()}")
-        self.clear_entries()
-        self.save_inventory()  # Save inventory after updating a product
+                if product_type == "Perishable" and isinstance(product, PerishableProduct):
+                    product.expiration_date = datetime.strptime(expiration_or_shelf_life, "%Y-%m-%d")
+                elif product_type == "Non-Perishable" and isinstance(product, NonPerishableProduct):
+                    product.shelf_life = expiration_or_shelf_life
+
+                # Update the display
+                self.product_list.delete("1.0", ctk.END)
+                for prod in self.inventory:
+                    self.product_list.insert(ctk.END, f"{prod}\n")
+
+                self.transaction_history.append(f"Updated {product.name} at {datetime.now()}")
+                self.clear_entries()
+                self.save_inventory()  # Save inventory after updating a product
+                break
 
     def remove_product(self):
-        # Function to remove a product (example, needs real selection handling)
+        # Function to remove a product
         selected_item = self.product_list.get("1.0", ctk.END).splitlines()[0]  # Example, needs actual selection
-        self.product_list.delete("1.0", ctk.END)  # Replace with correct index handling
-        self.transaction_history.append(f"Removed {selected_item.split(',')[0]} at {datetime.now()}")
+        selected_name = selected_item.split(":")[0]  # Extract the product name from the selected item
+
+        # Find and remove the product from the inventory
+        self.inventory = [product for product in self.inventory if product.name != selected_name]
+
+        # Update the display
+        self.product_list.delete("1.0", ctk.END)
+        for product in self.inventory:
+            self.product_list.insert(ctk.END, f"{product}\n")
+
+        self.transaction_history.append(f"Removed {selected_name} at {datetime.now()}")
         self.save_inventory()  # Save inventory after removing a product
 
     def search_product(self):
@@ -392,6 +525,7 @@ class Inventory:
         self.quantity_entry.delete(0, ctk.END)
         self.price_entry.delete(0, ctk.END)
         self.supplier_entry.delete(0, ctk.END)
+        self.distributor_contact_entry.delete(0, ctk.END)
         self.min_stock_entry.delete(0, ctk.END)
         self.max_stock_entry.delete(0, ctk.END)
         self.expiration_entry.delete(0, ctk.END)

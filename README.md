@@ -53,8 +53,11 @@ classDiagram
     class Inventory {
         -total_inv : list
         -transaction_history : list
+        -username : str
+        -inventory_file : str
         +__init__()
         +show_inventory()
+        +save_inventory()
         +add_product(Product)
         +remove_product(product_index)
         +update_product(product_index, quantity, price)
@@ -136,6 +139,8 @@ The `Inventory` class manages the warehouse's stock of products.
 - **Attributes**:
   - `total_inv`: A list of products currently in inventory.
   - `transaction_history`: A log of all transactions performed on the inventory.
+  - `username` : Register some actions on inventory.
+  - `ìnventory_file` : Path for file.
 
 - **Methods**:
   - `show_inventory`: Displays all products in the inventory.
@@ -144,8 +149,9 @@ The `Inventory` class manages the warehouse's stock of products.
   - `update_product`: Updates the quantity and/or price of a product.
   - `search_product`: Searches for products based on name, category, or price range.
   - `generate_report`: Generates various types of reports, including full inventory, low stock, expiring soon, and expired products.
+  - `save_inventory`: Method is used to persist the current state of the inventory to a file or database. This ensures that all changes made to the inventory are saved and can be restored in future sessions
 
-## Application Workflow
+## Main.py: Application Workflow
 
 1. **User Registration/Login**:
    - Users can register or log in to access the warehouse management features.
