@@ -11,7 +11,6 @@ classDiagram
     class UserManager {
         -user_file : string
         -user_data : dict
-        +__init__(user_file)
         +load_users() dict
         +save_users()
         +register_user()
@@ -21,7 +20,6 @@ classDiagram
     class Supplier {
         -name : string
         -contact_info : string
-        +__init__(name, contact_info)
     }
 
     class Product {
@@ -31,7 +29,6 @@ classDiagram
         -supplier : Supplier
         -min_stock : int
         -max_stock : int
-        +__init__(name, quantity, price, supplier, min_stock, max_stock)
         +update_quantity(quantity)
         +update_price(price)
         +check_stock()
@@ -40,13 +37,11 @@ classDiagram
 
     class PerishableProduct {
         -expiration_date : datetime
-        +__init__(name, quantity, price, expiration_date, supplier, min_stock, max_stock)
         +__str__() string
     }
 
     class NonPerishableProduct {
         -shelf_life : string
-        +__init__(name, quantity, price, shelf_life, supplier, min_stock, max_stock)
         +__str__() string
     }
 
@@ -55,7 +50,6 @@ classDiagram
         -transaction_history : list
         -username : str
         -inventory_file : str
-        +__init__()
         +show_inventory()
         +save_inventory()
         +add_product(Product)
